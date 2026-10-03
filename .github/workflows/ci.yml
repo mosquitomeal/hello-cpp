@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false  # Don't cancel Windows/macOS if Ubuntu fails!
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
@@ -16,16 +17,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install Dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+
     - name: Configure CMake
-      run: cmake -B build
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
-      run: cmake --build build
+      run: cmake --build build --config Release
 
     - name: Run Binary
       run: |
         if [ "${{ runner.os }}" = "Windows" ]; then
-          ./build/Debug/hello_cpp.exe
+          ./build/Release/hello_cpp.exe
         else
           ./build/hello_cpp
         fi
