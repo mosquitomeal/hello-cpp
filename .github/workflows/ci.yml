@@ -37,3 +37,11 @@ jobs:
           ./build/hello_cpp
         fi
       shell: bash
+      
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: hello-cpp-${{ matrix.os }}
+        path: |
+          build/hello_cpp
+          build/Release/hello_cpp.exe
