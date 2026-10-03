@@ -45,3 +45,19 @@ jobs:
         path: |
           build/hello_cpp
           build/Release/hello_cpp.exe
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            hello-cpp-ubuntu-latest/hello_cpp
+            hello-cpp-windows-latest/hello_cpp.exe
+            hello-cpp-macos-latest/hello_cpp
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
