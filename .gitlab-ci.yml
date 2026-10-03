@@ -1,0 +1,13 @@
+image: gcc:latest
+
+stages:
+  - build
+
+build-job:
+  stage: build
+  before_script:
+    - apt-get update && apt-get install -y cmake
+  script:
+    - cmake -B build
+    - cmake --build build
+    - ./build/hello_cpp

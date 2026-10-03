@@ -1,0 +1,32 @@
+name: C++ CMake CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: cmake -B build
+
+    - name: Build Project
+      run: cmake --build build
+
+    - name: Run Binary
+      run: |
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          ./build/Debug/hello_cpp.exe
+        else
+          ./build/hello_cpp
+        fi
+      shell: bash
