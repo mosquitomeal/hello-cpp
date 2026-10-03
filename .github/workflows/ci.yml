@@ -3,13 +3,14 @@ name: C++ CMake CI
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
 
 jobs:
   build:
     strategy:
-      fail-fast: false  # Don't cancel Windows/macOS if Ubuntu fails!
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
@@ -37,27 +38,39 @@ jobs:
           ./build/hello_cpp
         fi
       shell: bash
-      
-    - name: Upload Build Artifact
+
+    - name: Prepare Binary for Upload (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: cp build/hello_cpp hello_cpp-${{ matrix.os }}
+
+    - name: Prepare Binary for Upload (Windows)
+      if: runner.os == 'Windows'
+      run: cp build/Release/hello_cpp.exe hello_cpp-${{ matrix.os }}.exe
+      shell: bash
+
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: hello-cpp-${{ matrix.os }}
-        path: |
-          build/hello_cpp
-          build/Release/hello_cpp.exe
+        name: binary-${{ matrix.os }}
+        path: hello_cpp-${{ matrix.os }}*
 
   release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Display Downloaded Files
+        run: ls -R ./artifacts
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            hello-cpp-ubuntu-latest/hello_cpp
-            hello-cpp-windows-latest/hello_cpp.exe
-            hello-cpp-macos-latest/hello_cpp
+          files: ./artifacts/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
